@@ -1,7 +1,12 @@
+-- Switch to the database and schema
 USE DATABASE BANK_DB;
 USE SCHEMA PUBLIC;
 
-CREATE Temprary TABLE TEMP_FAILED_TRANSACTION AS
+-- Drop the temp table if it exists
+DROP TABLE IF EXISTS TEMP_FAILED_TRANSACTIONS;
+
+-- Create a temporary table
+CREATE TEMPORARY TABLE TEMP_FAILED_TRANSACTIONS AS
 SELECT
     t.transaction_id,
     t.account_id,
@@ -15,6 +20,3 @@ JOIN BANK_DB.PUBLIC.ACCOUNTS a
   ON t.account_id = a.account_id
 WHERE t.status = 'FAILED'
   AND t.transaction_date = CURRENT_DATE();
-
--- Optional validation
-SELECT COUNT(*) AS failed_txn_count FROM TEMP_FAILED_TRANSACTIONS;
