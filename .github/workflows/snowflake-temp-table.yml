@@ -16,7 +16,7 @@ jobs:
       - name: Run SQL in Snowflake
         uses: Snowflake-Labs/snowflake-action@v1
         with:
-          SNOWFLAKE_ACCOUNT: ${{ secrets.CS96965.ap-south-1.aws }}
+          SNOWFLAKE_ACCOUNT: ${{ secrets.cs96965.ap-south-1.aws }}
           SNOWFLAKE_USER: ${{ secrets.GANESH }}
           SNOWFLAKE_PASSWORD: ${{ secrets.JJ8F7mZFLh3uvWb }}
           SNOWFLAKE_ROLE: SYSADMIN
