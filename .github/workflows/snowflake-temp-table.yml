@@ -1,9 +1,9 @@
 name: Create Temp Table in Snowflake
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:  # allows manual runs
   push:
-    branches: ["main"]
+    branches: [ "main" ]
     paths:
       - "sql/create_temp_failed_txn.sql"
 
@@ -23,18 +23,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Install Python and Snowflake Connector
+      - name: Set up Python and install Snowflake connector
         run: |
           python3 -m venv venv
           source venv/bin/activate
           pip install --upgrade pip
           pip install snowflake-connector-python
-
-      - name: Sanitize Secrets
-        run: |
-          export SNOWFLAKE_ACCOUNT="${SNOWFLAKE_ACCOUNT//[$'\n\r']}"
-          export SNOWFLAKE_USER="${SNOWFLAKE_USER//[$'\n\r']}"
-          export SNOWFLAKE_PASSWORD="${SNOWFLAKE_PASSWORD//[$'\n\r']}"
 
       - name: Run SQL in Snowflake
         run: |
@@ -44,6 +38,7 @@ jobs:
           import snowflake.connector
           import sys
 
+          # Connect to Snowflake
           try:
               conn = snowflake.connector.connect(
                   user=os.getenv("SNOWFLAKE_USER").strip(),
@@ -59,24 +54,24 @@ jobs:
               print(f"❌ Failed to connect to Snowflake: {e}")
               sys.exit(1)
 
+          # Read SQL file and execute statements safely
           try:
               with open("sql/create_temp_failed_txn.sql", "r") as f:
                   sql_script = f.read()
 
+              # Split SQL script into individual statements and ignore empty ones
+              statements = [stmt.strip() for stmt in sql_script.split(';') if stmt.strip()]
+
               cs = conn.cursor()
-              # Split the SQL script into individual statements
-              statements = sql_script.split(';')
               for stmt in statements:
-                  stmt = stmt.strip()
-                  if stmt:
-                      cs.execute(stmt)
-              print("✅ SQL script executed successfully!")
+                  cs.execute(stmt)
 
-              # Optional validation: print number of failed transactions
-              cs.execute("SELECT COUNT(*) FROM TEMP_FAILED_TRANSACTIONS")
+              # Optional: print count of rows in temp table
+              cs.execute("SELECT COUNT(*) AS failed_txn_count FROM TEMP_FAILED_TRANSACTIONS")
               count = cs.fetchone()[0]
-              print(f"ℹ️ Number of failed transactions: {count}")
+              print(f"✅ TEMP_FAILED_TRANSACTIONS row count: {count}")
 
+              print("✅ SQL script executed successfully!")
           except Exception as e:
               print(f"❌ Failed to execute SQL script: {e}")
               sys.exit(1)
