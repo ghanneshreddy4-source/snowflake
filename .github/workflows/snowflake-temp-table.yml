@@ -18,7 +18,7 @@ jobs:
         with:
           SNOWFLAKE_ACCOUNT: ${{ secrets.CS96965.ap-south-1.aws }}
           SNOWFLAKE_USER: ${{ secrets.GANESH }}
-          SNOWFLAKE_PASSWORD: ${{ secrets.YGaneshreddy@184 }}
+          SNOWFLAKE_PASSWORD: ${{ secrets.JJ8F7mZFLh3uvWb }}
           SNOWFLAKE_ROLE: SYSADMIN
           SNOWFLAKE_WAREHOUSE: COMPUTE_WH
           SNOWFLAKE_DATABASE: PC_DBT_DB
