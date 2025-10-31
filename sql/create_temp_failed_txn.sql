@@ -22,3 +22,4 @@ WHERE t.status = 'FAILED'
 SELECT COUNT(*) AS failed_txn_count FROM TEMP_FAILED_TRANSACTIONS;
 -- trigger workflow
 -- Test run to trigger workflow
+-- Trigger test run Fri Oct 31 11:32:07 UTC 2025
