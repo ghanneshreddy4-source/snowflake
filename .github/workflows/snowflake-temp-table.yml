@@ -1,4 +1,4 @@
-name: Create Temp Table in Snowflake
+name: Create Table in Snowflake
 
 on:
   workflow_dispatch:
@@ -70,11 +70,12 @@ jobs:
               print(f"❌ Failed to read or clean SQL file: {e}")
               sys.exit(1)
 
-          # Execute each SQL statement
+          # Execute each SQL statement and commit
           try:
               cs = conn.cursor()
               for stmt in statements:
                   cs.execute(stmt)
+                  conn.commit()  # Ensure permanent table is committed
                   print(f"✅ Executed statement:\n{stmt[:80]}{'...' if len(stmt) > 80 else ''}")
           except Exception as e:
               print(f"❌ Failed to execute SQL statement: {e}")
