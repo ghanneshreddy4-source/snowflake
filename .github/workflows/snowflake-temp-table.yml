@@ -13,18 +13,49 @@ jobs:
       SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
       SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
       SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+      SNOWFLAKE_ROLE: SYSADMIN
+      SNOWFLAKE_WAREHOUSE: COMPUTE_WH
+      SNOWFLAKE_DATABASE: BANK_DB
+      SNOWFLAKE_SCHEMA: TEMP_SCHEMA
+
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Install Python and Snowflake Connector
+        run: |
+          python3 -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+          pip install snowflake-connector-python
+
       - name: Run SQL in Snowflake
-        uses: Snowflake-Labs/snowflake-actions@v2
-        with:
-          SNOWFLAKE_ACCOUNT: ${{ secrets.cs96965.ap-south-1.aws }}
-          SNOWFLAKE_USER: ${{ secrets.GANESH }}
-          SNOWFLAKE_PASSWORD: ${{ secrets.JJ8F7mZFLh3uvWb }}
-          SNOWFLAKE_ROLE: SYSADMIN
-          SNOWFLAKE_WAREHOUSE: COMPUTE_WH
-          SNOWFLAKE_DATABASE: PC_DBT_DB
-          SNOWFLAKE_SCHEMA: DBT_GRED
-          SQL_FILE: sql/create_temp_failed_txn.sql
+        run: |
+          source venv/bin/activate
+          python3 - <<'EOF'
+          import snowflake.connector
+          import os
+
+          conn = snowflake.connector.connect(
+              user=os.getenv("SNOWFLAKE_USER"),
+              password=os.getenv("SNOWFLAKE_PASSWORD"),
+              account=os.getenv("SNOWFLAKE_ACCOUNT"),
+              warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+              database=os.getenv("SNOWFLAKE_DATABASE"),
+              schema=os.getenv("SNOWFLAKE_SCHEMA"),
+              role=os.getenv("SNOWFLAKE_ROLE")
+          )
+
+          print("✅ Connected to Snowflake successfully!")
+
+          with open("sql/create_temp_failed_txn.sql", "r") as f:
+              sql_script = f.read()
+
+          cs = conn.cursor()
+          try:
+              cs.execute(sql_script)
+              print("✅ SQL script executed successfully!")
+          finally:
+              cs.close()
+              conn.close()
+          EOF
