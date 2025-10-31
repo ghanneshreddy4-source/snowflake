@@ -1,1 +1,26 @@
+name: Create Temp Table in Snowflake
 
+on:
+  push:
+    branches: [ "main" ]
+    paths:
+      - "sql/create_temp_failed_txn.sql"
+
+jobs:
+  run-sql:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Run SQL in Snowflake
+        uses: Snowflake-Labs/snowflake-action@v1
+        with:
+          SNOWFLAKE_ACCOUNT: ${{ secrets.CS96965.ap-south-1.aws }}
+          SNOWFLAKE_USER: ${{ secrets.GANESH }}
+          SNOWFLAKE_PASSWORD: ${{ secrets.YGaneshreddy@184 }}
+          SNOWFLAKE_ROLE: SYSADMIN
+          SNOWFLAKE_WAREHOUSE: COMPUTE_WH
+          SNOWFLAKE_DATABASE: PC_DBT_DB
+          SNOWFLAKE_SCHEMA: DBT_GRED
+          SQL_FILE: sql/create_temp_failed_txn.sql
