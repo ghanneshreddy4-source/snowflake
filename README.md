@@ -1,0 +1,2 @@
+# snowflake
+creating temp tables
