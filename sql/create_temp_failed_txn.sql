@@ -21,3 +21,4 @@ WHERE t.status = 'FAILED'
 -- Optional validation
 SELECT COUNT(*) AS failed_txn_count FROM TEMP_FAILED_TRANSACTIONS;
 -- trigger workflow
+-- Test run to trigger workflow
