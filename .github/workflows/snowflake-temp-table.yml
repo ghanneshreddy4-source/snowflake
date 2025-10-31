@@ -1,9 +1,9 @@
 name: Create Temp Table in Snowflake
 
 on:
-  workflow_dispatch:  # Manual run
+  workflow_dispatch:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
     paths:
       - "sql/create_temp_failed_txn.sql"
 
@@ -58,12 +58,16 @@ jobs:
           try:
               with open("sql/create_temp_failed_txn.sql", "r") as f:
                   sql_script = f.read()
-              statements = [stmt.strip() for stmt in sql_script.split(';') if stmt.strip()]
+              # Remove comments and empty lines
+              lines = [line for line in sql_script.splitlines() if line.strip() and not line.strip().startswith("--")]
+              cleaned_sql = "\n".join(lines)
+              # Split by semicolon safely
+              statements = [stmt.strip() for stmt in cleaned_sql.split(';') if stmt.strip()]
               if not statements:
-                  print("❌ SQL script is empty. Please check your file.")
+                  print("❌ SQL script is empty after cleaning. Please check your file.")
                   sys.exit(1)
           except Exception as e:
-              print(f"❌ Failed to read SQL file: {e}")
+              print(f"❌ Failed to read or clean SQL file: {e}")
               sys.exit(1)
 
           # Execute each SQL statement
