@@ -64,8 +64,12 @@ jobs:
                   sql_script = f.read()
 
               cs = conn.cursor()
-              # Execute multiple statements safely
-              cs.execute_string(sql_script, split_statements=True, return_cursors=False)
+              # Split the SQL script into individual statements
+              statements = sql_script.split(';')
+              for stmt in statements:
+                  stmt = stmt.strip()
+                  if stmt:
+                      cs.execute(stmt)
               print("✅ SQL script executed successfully!")
 
               # Optional validation: print number of failed transactions
