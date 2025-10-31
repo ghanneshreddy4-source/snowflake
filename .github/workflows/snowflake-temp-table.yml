@@ -9,12 +9,16 @@ on:
 jobs:
   run-sql:
     runs-on: ubuntu-latest
+    env:
+      SNOWFLAKE_ACCOUNT: ${{ secrets.SNOWFLAKE_ACCOUNT }}
+      SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+      SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Run SQL in Snowflake
-        uses: Snowflake-Labs/snowflake-action@v1
+        uses: Snowflake-Labs/snowflake-actions@v2
         with:
           SNOWFLAKE_ACCOUNT: ${{ secrets.cs96965.ap-south-1.aws }}
           SNOWFLAKE_USER: ${{ secrets.GANESH }}
