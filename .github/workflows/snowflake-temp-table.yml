@@ -62,15 +62,17 @@ jobs:
           try:
               with open("sql/create_temp_failed_txn.sql", "r") as f:
                   sql_script = f.read()
+
               cs = conn.cursor()
-              # Execute multiple statements
+              # Execute multiple statements safely
               cs.execute_string(sql_script, split_statements=True, return_cursors=False)
               print("✅ SQL script executed successfully!")
 
               # Optional validation: print number of failed transactions
-              cs.execute("SELECT COUNT(*) AS failed_txn_count FROM TEMP_FAILED_TRANSACTIONS")
-              result = cs.fetchone()
-              print(f"ℹ️ Failed transactions inserted: {result[0]}")
+              cs.execute("SELECT COUNT(*) FROM TEMP_FAILED_TRANSACTIONS")
+              count = cs.fetchone()[0]
+              print(f"ℹ️ Number of failed transactions: {count}")
+
           except Exception as e:
               print(f"❌ Failed to execute SQL script: {e}")
               sys.exit(1)
