@@ -1,9 +1,9 @@
 name: Create Temp Table in Snowflake
 
 on:
-  workflow_dispatch:  # ✅ allows manual runs from GitHub Actions tab
+  workflow_dispatch:  # allows manual runs
   push:
-    branches: [ "main" ]
+    branches: ["main"]
     paths:
       - "sql/create_temp_failed_txn.sql"
 
@@ -17,7 +17,7 @@ jobs:
       SNOWFLAKE_ROLE: SYSADMIN
       SNOWFLAKE_WAREHOUSE: COMPUTE_WH
       SNOWFLAKE_DATABASE: PC_DBT_DB
-      SNOWFLAKE_SCHEMA:  DBT_GRED
+      SNOWFLAKE_SCHEMA: DBT_GRED
 
     steps:
       - name: Checkout repository
@@ -30,32 +30,44 @@ jobs:
           pip install --upgrade pip
           pip install snowflake-connector-python
 
+      - name: Sanitize Secrets
+        run: |
+          export SNOWFLAKE_ACCOUNT="${SNOWFLAKE_ACCOUNT//[$'\n\r']}"
+          export SNOWFLAKE_USER="${SNOWFLAKE_USER//[$'\n\r']}"
+          export SNOWFLAKE_PASSWORD="${SNOWFLAKE_PASSWORD//[$'\n\r']}"
+
       - name: Run SQL in Snowflake
         run: |
           source venv/bin/activate
           python3 - <<'EOF'
-          import snowflake.connector
           import os
+          import snowflake.connector
+          import sys
 
-          conn = snowflake.connector.connect(
-              user=os.getenv("SNOWFLAKE_USER"),
-              password=os.getenv("SNOWFLAKE_PASSWORD"),
-              account=os.getenv("SNOWFLAKE_ACCOUNT"),
-              warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-              database=os.getenv("SNOWFLAKE_DATABASE"),
-              schema=os.getenv("SNOWFLAKE_SCHEMA"),
-              role=os.getenv("SNOWFLAKE_ROLE")
-          )
-
-          print("✅ Connected to Snowflake successfully!")
-
-          with open("sql/create_temp_failed_txn.sql", "r") as f:
-              sql_script = f.read()
-
-          cs = conn.cursor()
           try:
+              conn = snowflake.connector.connect(
+                  user=os.getenv("SNOWFLAKE_USER").strip(),
+                  password=os.getenv("SNOWFLAKE_PASSWORD").strip(),
+                  account=os.getenv("SNOWFLAKE_ACCOUNT").strip(),
+                  warehouse=os.getenv("SNOWFLAKE_WAREHOUSE").strip(),
+                  database=os.getenv("SNOWFLAKE_DATABASE").strip(),
+                  schema=os.getenv("SNOWFLAKE_SCHEMA").strip(),
+                  role=os.getenv("SNOWFLAKE_ROLE").strip()
+              )
+              print("✅ Connected to Snowflake successfully!")
+          except Exception as e:
+              print(f"❌ Failed to connect to Snowflake: {e}")
+              sys.exit(1)
+
+          try:
+              with open("sql/create_temp_failed_txn.sql", "r") as f:
+                  sql_script = f.read()
+              cs = conn.cursor()
               cs.execute(sql_script)
               print("✅ SQL script executed successfully!")
+          except Exception as e:
+              print(f"❌ Failed to execute SQL script: {e}")
+              sys.exit(1)
           finally:
               cs.close()
               conn.close()
