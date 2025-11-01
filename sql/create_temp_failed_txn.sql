@@ -5,8 +5,7 @@ USE SCHEMA PUBLIC;
 -- Drop the temp table if it exists
 DROP TABLE IF EXISTS TEMP_FAILED_TRANSACTIONS;
 
--- Create a temporary table
-CREATE TEMPORARY TABLE TEMP_FAILED_TRANSACTIONS AS
+CREATE TABLE TEMP_FAILED_TRANSACTIONS AS
 SELECT
     t.transaction_id,
     t.account_id,
