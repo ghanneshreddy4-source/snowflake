@@ -10,7 +10,7 @@ on:
   push:
     branches: ["main"]
     paths:
-      - "sql/create_temp_success_txn.sql"
+      - "sql/*.sql"
 
 jobs:
   run-sql:
