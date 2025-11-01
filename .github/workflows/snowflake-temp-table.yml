@@ -2,6 +2,11 @@ name: Create Table in Snowflake
 
 on:
   workflow_dispatch:
+   inputs:
+      sql_file:
+        description: "Path to the SQL file to execute"
+        required: true
+        default: "sql/create_temp_success_txn.sql"
   push:
     branches: ["main"]
     paths:
