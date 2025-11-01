@@ -85,8 +85,8 @@ jobs:
                   conn.commit()
                   print(f"✅ Executed statement:\n{stmt[:80]}{'...' if len(stmt) > 80 else ''}")
               cs.execute("""
-                  CREATE OR REPLACE TABLE BACKUP_FAILED_TRANSACTIONS AS 
-                  SELECT * FROM TEMP_FAILED_TRANSACTIONS;
+                  CREATE OR REPLACE TABLE BACKUP_SUCCESS_TRANSACTIONS AS 
+                  SELECT * FROM TEMP_SUCCESS_TRANSACTIONS;
               """)
               conn.commit()
           except Exception as e:
