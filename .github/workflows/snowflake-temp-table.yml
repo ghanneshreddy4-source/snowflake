@@ -5,7 +5,7 @@ on:
   push:
     branches: ["main"]
     paths:
-      - "sql/create_temp_failed_txn.sql"
+      - "sql/create_temp_success_txn.sql"
 
 jobs:
   run-sql:
@@ -80,7 +80,7 @@ jobs:
           except Exception as e:
               print(f"❌ Failed to execute SQL statement: {e}")
               sys.exit(1)
-          finally:
+          #finally:
               cs.close()
               conn.close()
           EOF
