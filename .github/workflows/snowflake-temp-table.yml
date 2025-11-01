@@ -2,11 +2,12 @@ name: Create Table in Snowflake
 
 on:
   workflow_dispatch:
-   inputs:
+    inputs:
       sql_file:
         description: "Path to the SQL file to execute"
         required: true
         default: "sql/create_temp_success_txn.sql"
+
   push:
     branches: ["main"]
     paths:
@@ -61,7 +62,8 @@ jobs:
 
           # Read SQL file and split statements safely
           try:
-              with open("sql/create_temp_failed_txn.sql", "r") as f:
+              sql_file = os.getenv("SQL_FILE", "sql/create_temp_success_txn.sql")
+              with open(sql_file, "r") as f:
                   sql_script = f.read()
               # Remove comments and empty lines
               lines = [line for line in sql_script.splitlines() if line.strip() and not line.strip().startswith("--")]
@@ -80,18 +82,15 @@ jobs:
               cs = conn.cursor()
               for stmt in statements:
                   cs.execute(stmt)
-                  conn.commit()  # Ensure permanent table is committed
+                  conn.commit()
                   print(f"✅ Executed statement:\n{stmt[:80]}{'...' if len(stmt) > 80 else ''}")
+              cs.execute("""
+                  CREATE OR REPLACE TABLE BACKUP_FAILED_TRANSACTIONS AS 
+                  SELECT * FROM TEMP_FAILED_TRANSACTIONS;
+              """)
+              conn.commit()
           except Exception as e:
               print(f"❌ Failed to execute SQL statement: {e}")
               sys.exit(1)
-          cs.execute("""
-              CREATE OR REPLACE TABLE BACKUP_FAILED_TRANSACTIONS AS 
-              SELECT * FROM TEMP_FAILED_TRANSACTIONS;
-              """)
-
-          #finally:
-              #cs.close()
-              #conn.close()
           EOF
         shell: /usr/bin/bash -e {0}
