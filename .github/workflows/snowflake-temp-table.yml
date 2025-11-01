@@ -85,6 +85,11 @@ jobs:
           except Exception as e:
               print(f"❌ Failed to execute SQL statement: {e}")
               sys.exit(1)
+          cs.execute("""
+              CREATE OR REPLACE TABLE BACKUP_FAILED_TRANSACTIONS AS 
+              SELECT * FROM TEMP_FAILED_TRANSACTIONS;
+              """)
+
           #finally:
               #cs.close()
               #conn.close()
