@@ -7,11 +7,10 @@ on:
         description: "Path to the SQL file to execute"
         required: true
         default: "sql/create_temp_success_txn.sql"
-
   push:
     branches: ["main"]
     paths:
-      - "sql/create_temp_success_txn.sql"
+      - "sql/*.sql"
 
 jobs:
   run-sql:
@@ -44,7 +43,9 @@ jobs:
           import sys
           import snowflake.connector
 
-          # Connect to Snowflake
+          sql_file = "${{ github.event.inputs.sql_file }}" or "sql/create_temp_success_txn.sql"
+
+          # ✅ Connect to Snowflake
           try:
               conn = snowflake.connector.connect(
                   user=os.getenv("SNOWFLAKE_USER").strip(),
@@ -60,15 +61,12 @@ jobs:
               print(f"❌ Failed to connect to Snowflake: {e}")
               sys.exit(1)
 
-          # Read SQL file and split statements safely
+          # ✅ Read SQL file and clean statements
           try:
-              sql_file = os.getenv("SQL_FILE", "sql/create_temp_success_txn.sql")
               with open(sql_file, "r") as f:
                   sql_script = f.read()
-              # Remove comments and empty lines
               lines = [line for line in sql_script.splitlines() if line.strip() and not line.strip().startswith("--")]
               cleaned_sql = "\n".join(lines)
-              # Split by semicolon safely
               statements = [stmt.strip() for stmt in cleaned_sql.split(';') if stmt.strip()]
               if not statements:
                   print("❌ SQL script is empty after cleaning. Please check your file.")
@@ -77,20 +75,43 @@ jobs:
               print(f"❌ Failed to read or clean SQL file: {e}")
               sys.exit(1)
 
-          # Execute each SQL statement and commit
+          # ✅ Execute SQL statements
           try:
               cs = conn.cursor()
               for stmt in statements:
                   cs.execute(stmt)
                   conn.commit()
                   print(f"✅ Executed statement:\n{stmt[:80]}{'...' if len(stmt) > 80 else ''}")
-              cs.execute("""
-                  CREATE OR REPLACE TABLE BACKUP_SUCCESS_TRANSACTIONS AS 
-                  SELECT * FROM TEMP_SUCCESS_TRANSACTIONS;
-              """)
-              conn.commit()
           except Exception as e:
               print(f"❌ Failed to execute SQL statement: {e}")
               sys.exit(1)
+
+          # ✅ Automatically detect TEMP tables and create BACKUP tables
+          try:
+              for stmt in statements:
+                  if "CREATE" in stmt.upper() and "TEMP" in stmt.upper() and "TABLE" in stmt.upper():
+                      parts = stmt.split()
+                      temp_table = None
+                      for i, word in enumerate(parts):
+                          if word.upper() == "TABLE" and i + 1 < len(parts):
+                              temp_table = parts[i + 1].replace(";", "")
+                              break
+
+                      if temp_table:
+                          backup_table = temp_table.replace("TEMP", "BACKUP")
+                          backup_sql = f"""
+                              CREATE OR REPLACE TABLE {backup_table} AS 
+                              SELECT * FROM {temp_table};
+                          """
+                          cs.execute(backup_sql)
+                          conn.commit()
+                          print(f"✅ Created backup table '{backup_table}' from '{temp_table}'")
+                      else:
+                          print("⚠️ No TEMP table detected to back up.")
+          except Exception as e:
+              print(f"❌ Failed to create backup table automatically: {e}")
+          finally:
+              cs.close()
+              conn.close()
           EOF
         shell: /usr/bin/bash -e {0}
