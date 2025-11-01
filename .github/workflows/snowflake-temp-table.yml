@@ -81,7 +81,7 @@ jobs:
               print(f"❌ Failed to execute SQL statement: {e}")
               sys.exit(1)
           #finally:
-              cs.close()
-              conn.close()
+              #cs.close()
+              #conn.close()
           EOF
         shell: /usr/bin/bash -e {0}
